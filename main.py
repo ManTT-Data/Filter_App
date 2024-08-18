@@ -16,3 +16,5 @@ audio_thread.start()
 # Chờ các luồng kết thúc
 video_thread.join()
 audio_thread.join()
+
+# End
