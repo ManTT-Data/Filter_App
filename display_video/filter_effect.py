@@ -44,7 +44,7 @@ def isOpen(image, face_landmarks, face_part, threshold):
 # Filter animation
 def animated(pic, x):
     if pic < 119:
-        overlay_image = cv.imread(f'{x}/{pic}.jpg', cv.IMREAD_UNCHANGED)
+        overlay_image = cv.imread(f'filters/{x}/{pic}.jpg', cv.IMREAD_UNCHANGED)
     if pic < 119:
         pic += 1
     return overlay_image, pic
