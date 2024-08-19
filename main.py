@@ -1,13 +1,13 @@
 import threading
 import record_audio.record as record
-import display_video.face2 as face2
+import display_video.camera as camera
 
 hat = False
 glasses = True
 beard = False
 
 # Add functions to thread to run in parallel
-video_thread = threading.Thread(target=face2.display_video)
+video_thread = threading.Thread(target=camera.display_video)
 audio_thread = threading.Thread(target=record.record_audio)
 
 # Run threads
