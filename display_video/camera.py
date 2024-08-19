@@ -7,8 +7,6 @@ from display_video import filter_effect
 
 mp_face_mesh = mp.solutions.face_mesh
 
-overlay_image = cv.imread('image_no_bg.png', cv.IMREAD_UNCHANGED)
-
 # Points in the eye area and iris
 LEFT_EYE =[ 362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385,384, 398 ]
 RIGHT_EYE=[ 33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161 , 246 ] 
@@ -43,9 +41,9 @@ def display_video():
             if results.multi_face_landmarks:
                 # Chọn filter
                 if filter.mangekyou == True:
-                    x = 's2'
+                    x = 'mangekyou_sharingan'
                 else: 
-                    x = 's1'
+                    x = 'sharingan'
                 if filter.pic < 119:
                     overlay_image, filter.pic = filter_effect.animated(filter.pic, x)
 
