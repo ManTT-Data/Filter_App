@@ -1,6 +1,6 @@
 import speech_recognition as sr
 import pyttsx3 
-import display_video.filter as filter
+import filter as filter
 
 r = sr.Recognizer() 
 
