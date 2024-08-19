@@ -52,8 +52,43 @@ def mask_eyes(frame, frame_raw, mesh_points):
 
     return final
 
+def transparency(overlay_l, overlay_r, alpha, final_alpha = 1.0, alpha_increment = 0.02):
+    # Extract alpha channel from overlay image
+    if overlay_l.shape[2] == 4:
+        alpha_channel_l = overlay_l[:, :, 3]  
+        overlay_l = overlay_l[:, :, :3]  
+        alpha_channel_r = overlay_r[:, :, 3] 
+        overlay_r = overlay_r[:, :, :3] 
+
+        # Adjust alpha channel
+        alpha_channel_l = (alpha_channel_l * alpha).astype(np.uint8)
+        alpha_channel_r = (alpha_channel_r * alpha).astype(np.uint8)
+
+        # Create new mask base on alpha channel
+        overlay_l_with_alpha = cv.merge([overlay_l[:, :, 0], 
+                                            overlay_l[:, :, 1], 
+                                            overlay_l[:, :, 2], 
+                                            alpha_channel_l])
+
+        overlay_r_with_alpha = cv.merge([overlay_r[:, :, 0], 
+                                            overlay_r[:, :, 1], 
+                                            overlay_r[:, :, 2], 
+                                            alpha_channel_r])
+    else:
+        overlay_l_with_alpha = overlay_l
+        overlay_r_with_alpha = overlay_r
+
+    # Adjust alpha for continue frame
+    alpha = min(final_alpha, alpha + alpha_increment)
+
+    return alpha, overlay_l_with_alpha, overlay_r_with_alpha
+
 def display_video():
     filter.pic = 0
+
+    # Transparency
+    alpha = 0.0
+
     cap = cv.VideoCapture(0)
     with mp_face_mesh.FaceMesh(
         max_num_faces=2,
@@ -94,21 +129,24 @@ def display_video():
                 # Resize overlay
                 overlay_l = cv.resize(overlay_image, (int(2 * l_radius), int(2 * l_radius)))
                 overlay_r = cv.resize(overlay_image, (int(2 * r_radius), int(2 * r_radius)))
-                
+
+                # Create transparency for filter effect
+                alpha, overlay_l_with_alpha, overlay_r_with_alpha = transparency(overlay_l, overlay_r, alpha, final_alpha = 1.0, alpha_increment = 0.02)
+
                 # Fill overlay_image by using mask
                 if left_eye_open:
-                    frame = cvzone.overlayPNG(frame, overlay_l, 
-                                                        [int(l_cx - overlay_l.shape[1] // 2), 
-                                                        int(l_cy - overlay_l.shape[0] // 2)])
+                    frame = cvzone.overlayPNG(frame, overlay_l_with_alpha, 
+                                                        [int(l_cx - overlay_l_with_alpha.shape[1] // 2), 
+                                                        int(l_cy - overlay_l_with_alpha.shape[0] // 2)])
                 if right_eye_open:
-                    frame = cvzone.overlayPNG(frame, overlay_r, 
-                                                        [int(r_cx - overlay_r.shape[1] // 2), 
-                                                        int(r_cy - overlay_r.shape[0] // 2)])
+                    frame = cvzone.overlayPNG(frame, overlay_r_with_alpha, 
+                                                        [int(r_cx - overlay_r_with_alpha.shape[1] // 2), 
+                                                        int(r_cy - overlay_r_with_alpha.shape[0] // 2)])
                 # Create the final image
                 final = mask_eyes(frame, frame_raw, mesh_points)
             else:
                 filter.pic = 0
-                filter.sharingan = False
+                # filter.sharingan = False
     
             if filter.sharingan == True:
                 cv.imshow('img', final)
