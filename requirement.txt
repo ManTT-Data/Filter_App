@@ -1,0 +1,7 @@
+cv2
+numpy
+mediapipe
+cvzone
+speech_recognition
+pyttsx3 
+threading
