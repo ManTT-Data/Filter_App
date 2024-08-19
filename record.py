@@ -3,13 +3,14 @@ import pyttsx3
 import filter
 
 r = sr.Recognizer() 
+
 def SpeakText(command):
-    
     # Initialize the engine
     engine = pyttsx3.init()
     engine.say(command) 
     engine.runAndWait()
 
+# Record function to activate filter
 def record_audio():    
     while(1):
         try:

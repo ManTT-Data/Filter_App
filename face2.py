@@ -1,4 +1,3 @@
-from operator import rshift
 import cv2 as cv 
 import numpy as np
 import mediapipe as mp 
@@ -10,11 +9,13 @@ mp_face_mesh = mp.solutions.face_mesh
 
 overlay_image = cv.imread('image_no_bg.png', cv.IMREAD_UNCHANGED)
 
+# Points in the eye area and iris
 LEFT_EYE =[ 362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385,384, 398 ]
 RIGHT_EYE=[ 33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161 , 246 ] 
 LEFT_IRIS = [474,475, 476, 477]
 RIGHT_IRIS = [469, 470, 471, 472]
 
+# Filter animation
 def animated(pic, x):
     if pic < 119:
         overlay_image = cv.imread(f'{x}/{pic}.jpg', cv.IMREAD_UNCHANGED)
@@ -22,28 +23,29 @@ def animated(pic, x):
         pic += 1
     return overlay_image, pic
 
+# Create mask to fill overlay
 def mask_eyes(frame, frame_raw, mesh_points):
-    # Tạo mặt nạ cho mí mắt trái và phải
+    # Create mask for left and right iris
     mask_left_eye = np.zeros_like(frame[:, :, 0])
     mask_right_eye = np.zeros_like(frame[:, :, 0])
     
     cv.fillPoly(mask_left_eye, [mesh_points[LEFT_EYE]], 255)
     cv.fillPoly(mask_right_eye, [mesh_points[RIGHT_EYE]], 255)
     
-    # Tạo mặt nạ toàn màu trắng
+    # Create a full white mask
     left_eye = np.ones_like(frame[:, :, 0]) * 255
     right_eye = np.ones_like(frame[:, :, 0]) * 255
 
-    # Vẽ vùng mắt màu đen
+    # Fill black into the eye area
     cv.fillPoly(left_eye, [mesh_points[LEFT_EYE]], 0)
     cv.fillPoly(right_eye, [mesh_points[RIGHT_EYE]], 0)
 
     
-    # Tạo mặt nạ tổng hợp cho cả hai mắt
+    # Create composite mask for both eyes
     mask_eyes = cv.bitwise_or(mask_left_eye, mask_right_eye)
     eyes = cv.bitwise_and(left_eye, right_eye)
     
-    # Áp dụng mặt nạ để che phần ảnh bị mí mắt che phủ
+    # Apply mask to complete filter layer
     masked_frame = cv.bitwise_and(frame, frame, mask=mask_eyes)
     without_eyes = cv.bitwise_or(frame_raw, frame_raw, mask = eyes)
     final = cv.bitwise_or(without_eyes, masked_frame)
@@ -82,18 +84,18 @@ def display_video():
 
                 mesh_points=np.array([np.multiply([p.x, p.y], [img_w, img_h]).astype(int) for p in results.multi_face_landmarks[0].landmark])
                 
-                # Kiểm tra xem mắt trái, phải có mở không
+                # Check if left and right eyes are open
                 left_eye_open = isOpen(frame, mesh_points, 'LEFT EYE', 2.5)
                 right_eye_open = isOpen(frame, mesh_points, 'RIGHT EYE', 2.5)
 
                 (l_cx, l_cy), l_radius = cv.minEnclosingCircle(mesh_points[LEFT_IRIS])
                 (r_cx, r_cy), r_radius = cv.minEnclosingCircle(mesh_points[RIGHT_IRIS])
 
-                # Chèn ảnh vào mống mắt 
+                # Resize overlay
                 overlay_l = cv.resize(overlay_image, (int(2 * l_radius), int(2 * l_radius)))
                 overlay_r = cv.resize(overlay_image, (int(2 * r_radius), int(2 * r_radius)))
                 
-                # Chèn ảnh sử dụng mask
+                # Fill overlay_image by using mask
                 if left_eye_open:
                     frame = cvzone.overlayPNG(frame, overlay_l, 
                                                         [int(l_cx - overlay_l.shape[1] // 2), 
@@ -102,7 +104,7 @@ def display_video():
                     frame = cvzone.overlayPNG(frame, overlay_r, 
                                                         [int(r_cx - overlay_r.shape[1] // 2), 
                                                         int(r_cy - overlay_r.shape[0] // 2)])
-                # Optimize filter
+                # Create the final image
                 final = mask_eyes(frame, frame_raw, mesh_points)
             else:
                 filter.pic = 0
