@@ -1,6 +1,6 @@
 import threading
-import record
-import face2
+import record_audio.record as record
+import display_video.face2 as face2
 
 hat = False
 glasses = True
